@@ -48,6 +48,7 @@ class style(object):
         calculate progress bar position based on current, maximum value and progress bar maxwidth
         """
         percent = current * 100.0 / maximum
+        self.percent = percent
         self.progress_width = int(percent / 100.0 * self.progress_maxwidth)
 
     def output(self, *args, **kw):
@@ -69,8 +70,11 @@ class classic(style):
     spinner_width = 1
     progress = False
 
-    def __init__(self, brackets = False):
+    spinners = ['-\|/', '.o0O0o. ']
+
+    def __init__(self, brackets=False, spinner=0):
         self.brackets = brackets
+        self.spinner = self.spinners[spinner]
         super(classic, self).__init__()
 
     def _output(self, final=False, endstring=None, *args, **kw):
@@ -94,17 +98,20 @@ class classicprogress(style):
     progress_check = '#'
     spinner = None
     progress = True
+    showpcnt = False
 
-    def __init__(self, width = 10, *args, **kw):
+    def __init__(self, width = 10, showpercentage = False, *args, **kw):
         self.progress_maxwidth = width
+        self.showpcnt = showpercentage
         super(classicprogress, self).__init__(*args, **kw)
 
     def _output(self, *args, **kw):
-        base = self.progress_prefix, self.progress_empty * self.progress_maxwidth, self.progress_suffix
-        output_left = base[:len(self.progress_prefix)][0]
         empty = "%s" % (self.progress_empty * self.progress_maxwidth)
         filler = empty[self.progress_width:self.progress_maxwidth]
-        return self.progress_prefix + "%s" % (self.progress_check * self.progress_width) + filler + self.progress_suffix
+        output = self.progress_prefix + "%s" % (self.progress_check * self.progress_width) + filler + self.progress_suffix
+        if (self.showpcnt):
+            output = output + " " + str(self.percent) + "%"
+        return output
 
 
 class propeller:
@@ -174,7 +181,7 @@ if __name__ == "__main__":
     """
     Simple spinner with brackets
     """
-    classic_style = classic(brackets=True)
+    classic_style = classic(brackets=True, spinner=1)
     p = propeller(style = classic_style)
     for i in xrange(1,randint(10,20)):
         p.update("Spinning classic with brackets %i " % i)
@@ -189,6 +196,18 @@ if __name__ == "__main__":
     maximum = 10
     for i in xrange(1,maximum+1):
         current = i
-        p.update("Classic progress brackets %i " % i, current = i, maximum = maximum)
+        p.update("Classic progress brackets %i " % i, current=i, maximum=maximum)
+        sleep(0.1)
+    p.end()
+
+    """
+    Simple progess bar with percentage shown
+    """
+    progress_style = classicprogress(width=50, showpercentage=True)
+    p = propeller(style = progress_style)
+    maximum = 10
+    for i in xrange(1,maximum+1):
+        current = i
+        p.update("Classic progress brackets and % ", current=i, maximum=maximum)
         sleep(0.1)
     p.end()
