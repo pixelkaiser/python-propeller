@@ -1,4 +1,4 @@
-__author__ = 'te'
+__author__ = 'te@nexttuesday.de'
 """
 Copyright (c) 2013, Thomas Einsporn
 All rights reserved.
@@ -141,10 +141,6 @@ class propeller:
         sys.stdout.write('\b' * self.stylelen)
         output = self.style.output(endstring=output, final=True)
         self.sysout(output)
-
-        #if not output is None:
-            #sysout('\b' * self.outlen)
-        #    sysout(output)
         self.sysnl()
 
     def sysout(self, output):
