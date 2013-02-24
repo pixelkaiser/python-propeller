@@ -66,7 +66,6 @@ class style(object):
 class classic(style):
     spinner_prefix = '['
     spinner_suffix = ']'
-    spinner = '-\|/'
     spinner_width = 1
     progress = False
 
@@ -93,7 +92,7 @@ class classicprogress(style):
 
     progress_maxwidth = 0
     progress_prefix = '['
-    progress_suffix = ']'
+    progress_suffix = '] '
     progress_empty = '~'
     progress_check = '#'
     spinner = None
@@ -105,12 +104,17 @@ class classicprogress(style):
         self.showpcnt = showpercentage
         super(classicprogress, self).__init__(*args, **kw)
 
-    def _output(self, *args, **kw):
+    def _output(self, final=False, endstring=None, *args, **kw):
         empty = "%s" % (self.progress_empty * self.progress_maxwidth)
         filler = empty[self.progress_width:self.progress_maxwidth]
         output = self.progress_prefix + "%s" % (self.progress_check * self.progress_width) + filler + self.progress_suffix
+
         if (self.showpcnt):
-            output = output + " " + str(self.percent) + "%"
+            output = output + str(self.percent) + "% "
+
+        if final == True and not endstring is None:
+            output = output + endstring
+
         return output
 
 
@@ -197,8 +201,10 @@ if __name__ == "__main__":
     for i in xrange(1,maximum+1):
         current = i
         p.update("Classic progress brackets %i " % i, current=i, maximum=maximum)
+        if i > maximum - 5:
+            break
         sleep(0.1)
-    p.end()
+    p.end("failed")
 
     """
     Simple progess bar with percentage shown
@@ -210,4 +216,5 @@ if __name__ == "__main__":
         current = i
         p.update("Classic progress brackets and % ", current=i, maximum=maximum)
         sleep(0.1)
-    p.end()
+    p.end("done")
+
