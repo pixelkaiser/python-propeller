@@ -1,45 +1,89 @@
 __author__ = 'te'
 """
+Copyright (c) 2013, Thomas Einsporn
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the <organization> nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import sys
 
+
 class style(object):
 
     spinner_pos = 0
-
-    def __init__(self):
-        self.width = len(self.spinner_prefix + self.spinner_suffix) + self.spinner_width
+    progress_width = 0
 
     def update_spinner(self):
+        """
+        update spinner position
+        """
         spinner_pos = self.spinner_pos + 1
-        if (spinner_pos >= len(self.spinner)):
+        if spinner_pos >= len(self.spinner):
             spinner_pos = 0
         self.spinner_pos = spinner_pos
 
-    def update_progress(self, percent = 0):
-        self.progress_width = int(percent / 100.0 * self.progress_width)
+    def update_progress(self, current, maximum):
+        """
+        calculate progress bar position based on current, maximum value and progress bar maxwidth
+        """
+        percent = current * 100.0 / maximum
+        self.progress_width = int(percent / 100.0 * self.progress_maxwidth)
 
     def output(self, *args, **kw):
-        self.update_spinner()
-        return self._output(*args, **kw)
+        """
+        update positions and get styled output
+        """
+        if self.spinner:
+            self.update_spinner()
+        if self.progress:
+            self.update_progress(current, maximum)
+        output = self._output(*args, **kw)
+        return output
+
 
 class classic(style):
     spinner_prefix = '['
     spinner_suffix = ']'
     spinner = '-\|/'
     spinner_width = 1
+    progress = False
 
     def __init__(self, brackets = False):
         self.brackets = brackets
         super(classic, self).__init__()
 
-    def _output(self, *args, **kw):
-        output = self.spinner[self.spinner_pos]
+    def _output(self, final=False, endstring=None, *args, **kw):
+        if final:
+            output = endstring
+        else:
+            output = self.spinner[self.spinner_pos]
 
         if (self.brackets):
             output = self.spinner_prefix + output + self.spinner_suffix
+
         return output
+
 
 class classicprogress(style):
 
@@ -48,63 +92,103 @@ class classicprogress(style):
     progress_suffix = ']'
     progress_empty = '~'
     progress_check = '#'
+    spinner = None
+    progress = True
 
-    def __init__(self, width = 10):
-        self.progress_width = width
-        super(classic, self).__init__()
+    def __init__(self, width = 10, *args, **kw):
+        self.progress_maxwidth = width
+        super(classicprogress, self).__init__(*args, **kw)
 
     def _output(self, *args, **kw):
-        return ""
+        return "%s%s%s" % (self.progress_prefix, self.progress_check * self.progress_width, self.progress_suffix)
+
 
 class propeller:
 
     style = None
     outlen = 0
+    stylelen = 0
 
-    def __init__(self, updateIntervall = 100, style = None):
+    def __init__(self, style=None):
+        """
+        init style if none set
+        """
         if (style is None):
             style = classic()
 
         self.style = style
 
-    def update(self, userstring = "", percent = 0):
-        sysout('\b' * self.outlen)
+    def update(self, userstring="", current=0, maximum=0):
+        """
+        back paddle the amount of chars from previous output
+        pass user string and get output from style
+        """
+        sys.stdout.write('\b' * self.outlen)
+        styleout = self.style.output(userstring=userstring, current=current, maximum=maximum)
+        self.stylelen = len(styleout)
+        output = userstring + styleout
+        self.sysout(output)
 
-        output = userstring + self.style.output(userstring = userstring, percent = percent)
-        sysout(output)
+    def end(self, output=None):
+        """
+        get last and final output from style
+        output new line
+        """
+        sys.stdout.write('\b' * self.stylelen)
+        output = self.style.output(endstring=output, final=True)
+        self.sysout(output)
 
+        #if not output is None:
+            #sysout('\b' * self.outlen)
+        #    sysout(output)
+        self.sysnl()
+
+    def sysout(self, output):
+        """
+        print output
+        """
+        sys.stdout.write(output)
+        sys.stdout.flush()
         self.outlen = len(output)
 
-    def end(self):
-        sysout("\n")
-
-def sysout(output):
-    sys.stdout.write (output)
-    sys.stdout.flush()
-
-def percentize(steps):
-    """Generate percental values."""
-    for i in range(steps + 1):
-        yield i * 100.0 / steps
+    def sysnl(self):
+        """
+        output new line
+        """
+        sys.stdout.write("\n")
+        sys.stdout.flush()
 
 if __name__ == "__main__":
     from time import sleep
+    from random import randint
 
     """
     Simple spinner
     """
     p = propeller()
-    for i in xrange(1,20):
-        p.update("Classic %i " % i)
-        sleep(0.1)
-    p.end()
+    for i in xrange(1,randint(10,20)):
+        p.update("Spinning classic %i " % i)
+        sleep(0.0)
+    p.end("done")
 
     """
     Simple spinner with brackets
     """
     classic_style = classic(brackets=True)
     p = propeller(style = classic_style)
-    for i in xrange(1,20):
-        p.update("Classic with brackets %i " % i)
-        sleep(0.1)
+    for i in xrange(1,randint(10,20)):
+        p.update("Spinning classic with brackets %i " % i)
+        sleep(0.0)
+    p.end("ok")
+
+    """
+    Simple progess bar
+    """
+    progress_style = classicprogress(width=50)
+    p = propeller(style = progress_style)
+    maximum = 10
+    for i in xrange(1,maximum+1):
+        current = i
+        p.update("Classic progress brackets %i " % i, current = i, maximum = maximum)
+        sleep(0.05)
     p.end()
