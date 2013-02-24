@@ -100,7 +100,11 @@ class classicprogress(style):
         super(classicprogress, self).__init__(*args, **kw)
 
     def _output(self, *args, **kw):
-        return "%s%s%s" % (self.progress_prefix, self.progress_check * self.progress_width, self.progress_suffix)
+        base = self.progress_prefix, self.progress_empty * self.progress_maxwidth, self.progress_suffix
+        output_left = base[:len(self.progress_prefix)][0]
+        empty = "%s" % (self.progress_empty * self.progress_maxwidth)
+        filler = empty[self.progress_width:self.progress_maxwidth]
+        return self.progress_prefix + "%s" % (self.progress_check * self.progress_width) + filler + self.progress_suffix
 
 
 class propeller:
@@ -168,7 +172,7 @@ if __name__ == "__main__":
     p = propeller()
     for i in xrange(1,randint(10,20)):
         p.update("Spinning classic %i " % i)
-        sleep(0.0)
+        sleep(0.1)
     p.end("done")
 
     """
@@ -178,7 +182,7 @@ if __name__ == "__main__":
     p = propeller(style = classic_style)
     for i in xrange(1,randint(10,20)):
         p.update("Spinning classic with brackets %i " % i)
-        sleep(0.0)
+        sleep(0.1)
     p.end("ok")
 
     """
@@ -190,5 +194,5 @@ if __name__ == "__main__":
     for i in xrange(1,maximum+1):
         current = i
         p.update("Classic progress brackets %i " % i, current = i, maximum = maximum)
-        sleep(0.05)
+        sleep(0.1)
     p.end()
