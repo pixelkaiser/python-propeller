@@ -1,8 +1,9 @@
+# -*- coding: utf8 -*-
 __author__ = 'te@nexttuesday.de'
 """
 
- )¯¯`'¯¸¯¯`,)¯¯|)¯¯)'‚/¯¯|\¯¯¯\')¯¯`'¯¸¯¯`,   ___   )¯¯ )'     )¯¯ )'         ___   )¯¯|)¯¯)'‚
-(____)–-·´'(__(\ ¯¯¯(°\__'\|__/(____)–-·´'|¯¯(\__('(___(¸.––-,(___(¸.––-,°|¯¯(\__('(__(\ ¯¯¯(°
+ )¯¯`'¯.¯¯`,)¯¯|)¯¯)'‚/¯¯|\¯¯¯\')¯¯`'¯.¯¯`,   ___   )¯¯ )'     )¯¯ )'         ___   )¯¯|)¯¯)'‚
+(____)–--´'(__(\ ¯¯¯(°\__'\|__/(____)–--´'|¯¯(\__('(___(_.––-,(___(_.––-,°|¯¯(\__('(__(\ ¯¯¯(°
        °        ¯¯¯¯                    ° |__(/¯¯¯(‘     ¯¯¯¯        ¯¯¯¯ |__(/¯¯¯(‘     ¯¯¯¯
               '‚                        '‚    ¯¯¯¯'‘                          ¯¯¯¯'‘
 
@@ -33,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import sys
+from time import time
 
 
 class style(object):
@@ -104,6 +106,7 @@ class classicprogress(style):
     spinner = None
     progress = True
     showpcnt = False
+    lastoutput = 0
 
     def __init__(self, width = 10, showpercentage = False, *args, **kw):
         self.progress_maxwidth = width
@@ -129,8 +132,10 @@ class propeller:
     style = None
     outlen = 0
     stylelen = 0
+    outputts = 0
+    interval = 0
 
-    def __init__(self, style=None):
+    def __init__(self, style=None, updateinterval = 100):
         """
         init style if none set
         """
@@ -138,17 +143,22 @@ class propeller:
             style = classic()
 
         self.style = style
+        self.interval = updateinterval
 
     def update(self, userstring="", current=0, maximum=0):
         """
+        early exit depending on updateinterval
         back paddle the amount of chars from previous output
         pass user string and get output from style
         """
+        if not (time() - self.outputts) * 1000> self.interval:
+            return
         sys.stdout.write('\b' * self.outlen)
         styleout = self.style.output(userstring=userstring, current=current, maximum=maximum)
         self.stylelen = len(styleout)
         output = userstring + styleout
         self.sysout(output)
+        self.outputts = time()
 
     def end(self, output=None):
         """
@@ -189,7 +199,7 @@ if __name__ == "__main__":
     p.end("done")
 
     """
-    Simple spinner with brackets
+    Simple spinner with brackets, limit output frequency
     """
     classic_style = classic(brackets=True, spinner=1)
     p = propeller(style = classic_style)
