@@ -135,7 +135,7 @@ class propeller:
     outputts = 0
     interval = 0
 
-    def __init__(self, style=None, updateinterval = 100):
+    def __init__(self, style=None, updateinterval=350):
         """
         init style if none set
         """
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     Simple spinner
     """
     p = propeller()
-    for i in xrange(1,randint(10,20)):
+    for i in xrange(1, randint(10, 20)):
         p.update("Spinning classic %i " % i)
         sleep(0.1)
     p.end("done")
@@ -202,9 +202,9 @@ if __name__ == "__main__":
     Simple spinner with brackets, limit output frequency
     """
     classic_style = classic(brackets=True, spinner=1)
-    p = propeller(style = classic_style)
-    for i in xrange(1,randint(10,20)):
-        p.update("Spinning classic with brackets %i " % i)
+    p = propeller(style=classic_style, updateinterval=50)
+    for i in xrange(1, randint(10, 200)):
+        p.update("fast spinning classic with brackets %i " % i)
         sleep(0.1)
     p.end("ok")
 
@@ -212,9 +212,9 @@ if __name__ == "__main__":
     Simple progess bar
     """
     progress_style = classicprogress(width=50)
-    p = propeller(style = progress_style)
+    p = propeller(style=progress_style)
     maximum = 10
-    for i in xrange(1,maximum+1):
+    for i in xrange(1, maximum + 1):
         current = i
         p.update("Classic progress brackets %i " % i, current=i, maximum=maximum)
         if i > maximum - 5:
@@ -226,9 +226,9 @@ if __name__ == "__main__":
     Simple progess bar with percentage shown
     """
     progress_style = classicprogress(width=50, showpercentage=True)
-    p = propeller(style = progress_style)
+    p = propeller(style=progress_style)
     maximum = 10
-    for i in xrange(1,maximum+1):
+    for i in xrange(1, maximum + 1):
         current = i
         p.update("Classic progress brackets and % ", current=i, maximum=maximum)
         sleep(0.1)
