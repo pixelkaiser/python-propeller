@@ -36,12 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import sys
 import locale
 from time import time
+from random import randint
 
 
 class Style(object):
 
     spinner_pos = 0
     progress_width = 0
+    current = 0
+    maximum = 0
 
     def update_spinner(self):
         """
@@ -56,11 +59,18 @@ class Style(object):
         """
         calculate progress bar position based on current, maximum value and progress bar maxwidth
         """
-        percent = current * 100.0 / maximum
-        self.percent = percent
-        self.progress_width = int(percent / 100.0 * self.progress_maxwidth)
+        if not maximum > 0:
+            maximum = self.maximum
+        if current > self.current:
+            self.current = current
 
-    def output(self, *args, **kw):
+        if maximum > 0:
+            percent = self.current * 100.0 / maximum
+            self.percent = percent
+            self.progress_width = int(percent / 100.0 * self.progress_maxwidth)
+            self.maximum = maximum
+
+    def output(self, current=0, maximum=0, *args, **kw):
         """
         update positions and get styled output
         """
@@ -140,10 +150,10 @@ class ClassicProgress(Style):
         filler = empty[self.progress_width:self.progress_maxwidth]
         output = self.progress_prefix + "%s" % (self.progress_check * self.progress_width) + filler + self.progress_suffix
 
-        if (self.showpcnt):
+        if self.showpcnt:
             output = output + str(self.percent) + "% "
 
-        if final == True and not endstring is None:
+        if final and endstring is not None:
             output = output + endstring
 
         return output
@@ -176,7 +186,7 @@ class propeller:
             self.terminal = False
             self.encoding = locale.getpreferredencoding()
 
-    def update(self, userstring="", current=0, maximum=0):
+    def update(self, userstring="", current=0, maximum=1):
         """
         early exit depending on updateinterval
         back paddle the amount of chars from previous output
@@ -221,9 +231,8 @@ class propeller:
         sys.stdout.write("\n")
         sys.stdout.flush()
 
-if __name__ == "__main__":
+def main(argv):
     from time import sleep
-    from random import randint
 
     """
     Simple spinner
@@ -251,7 +260,6 @@ if __name__ == "__main__":
     p = propeller(style=progress_style)
     maximum = 10
     for i in xrange(1, maximum + 1):
-        current = i
         p.update("Classic progress brackets %i " % i, current=i, maximum=maximum)
         if i > maximum - 5:
             break
@@ -265,7 +273,6 @@ if __name__ == "__main__":
     p = propeller(style=progress_style)
     maximum = 10
     for i in xrange(1, maximum + 1):
-        current = i
         p.update("Classic progress brackets and % ", current=i, maximum=maximum)
         sleep(0.1)
     p.end("done")
@@ -273,10 +280,15 @@ if __name__ == "__main__":
     """
     Simple spinners UTF8
     """
-    for s in range(0, 10):
+    for s in range(0, 1):
         classic_style = ClassicUTF8()
         p = propeller(style=classic_style, updateinterval=50)
         for i in xrange(1, 100):
             p.update("Spinning UTF8 %i " % i)
             sleep(0.1)
         p.end("done")
+
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
