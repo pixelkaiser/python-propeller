@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import sys
+import locale
 from time import time
 
 
@@ -89,7 +90,7 @@ class Classic(Style):
         else:
             output = self.spinner[self.spinner_pos]
 
-        if (self.brackets):
+        if self.brackets:
             output = self.spinner_prefix + output + self.spinner_suffix
 
         return output
@@ -129,7 +130,7 @@ class ClassicProgress(Style):
     showpcnt = False
     lastoutput = 0
 
-    def __init__(self, width = 10, showpercentage = False, *args, **kw):
+    def __init__(self, width=10, showpercentage=False, *args, **kw):
         self.progress_maxwidth = width
         self.showpcnt = showpercentage
         super(ClassicProgress, self).__init__(*args, **kw)
@@ -155,16 +156,25 @@ class propeller:
     stylelen = 0
     outputts = 0
     interval = 0
+    terminal = True
+    encoding = ""
+    finished = False
 
     def __init__(self, style=None, updateinterval=300):
         """
         init style if none set
         """
-        if (style is None):
+        if style is None:
             style = Classic()
 
         self.style = style
         self.interval = updateinterval
+
+        if sys.stdout.isatty():
+            self.encoding = sys.stdout.encoding
+        else:
+            self.terminal = False
+            self.encoding = locale.getpreferredencoding()
 
     def update(self, userstring="", current=0, maximum=0):
         """
@@ -172,21 +182,26 @@ class propeller:
         back paddle the amount of chars from previous output
         pass user string and get output from style
         """
-        if not (time() - self.outputts) * 1000> self.interval:
-            return
-        sys.stdout.write('\b' * self.outlen)
-        styleout = self.style.output(userstring=userstring, current=current, maximum=maximum)
-        self.stylelen = len(styleout)
-        output = userstring + styleout
-        self.sysout(output)
-        self.outputts = time()
+        if self.terminal:
+            if not (time() - self.outputts) * 1000 > self.interval:
+                return
+            sys.stdout.write('\b' * self.outlen)
+            styleout = self.style.output(userstring=userstring, current=current, maximum=maximum)
+            self.stylelen = len(styleout)
+            output = userstring + styleout
+            self.sysout(output)
+            self.outputts = time()
+        elif not self.finished:
+            self.sysout(userstring)
+            self.finished = True
 
     def end(self, output=None):
         """
         get last and final output from style
         output new line
         """
-        sys.stdout.write('\b' * self.stylelen)
+        if self.terminal:
+            sys.stdout.write('\b' * self.stylelen)
         output = self.style.output(endstring=output, final=True)
         self.sysout(output)
         self.sysnl()
