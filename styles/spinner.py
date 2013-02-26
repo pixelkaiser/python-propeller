@@ -83,3 +83,28 @@ class ClassicUTF8(Style):
             output = self.spinner_prefix + output + self.spinner_suffix
 
         return output
+
+class Phenox(Style):
+    spinner_prefix = '['
+    spinner_suffix = ']'
+    spinner_width = 1
+
+    spinners = [u"▜▟▙▛", u"▖▘▝▗", u"◸◹◿◺", u"◳◲◱◰", u"⌜⌝⌟⌞", u" ▁▂▃▄▅▆▇▆▅▄▃▂▁", u"⠁⠃⠇⡇⣇⣧⣷⣿⣾⣼⣸⢸⠸⠘⠈ ", u"⠇⡆⣄⣠⢰⠸⠙⠋"]
+
+    def __init__(self, brackets=True, spinner=0):
+        self.brackets = brackets
+        if spinner == 0:
+            spinner = randint(0, len(self.spinners)-1)
+        self.spinner = self.spinners[spinner]
+        super(Phenox, self).__init__()
+
+    def _output(self, final=False, endstring=None, *args, **kw):
+        if final:
+            output = endstring
+        else:
+            output = self.spinner[self.spinner_pos]
+
+        if (self.brackets):
+            output = self.spinner_prefix + output + self.spinner_suffix
+
+        return output

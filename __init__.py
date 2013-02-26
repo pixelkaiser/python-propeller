@@ -135,10 +135,20 @@ def main(argv):
     Simple spinner with brackets, limit output frequency
     """
     p = propeller(style="styles.spinner.Classic", brackets=True, spinner=1, updateinterval=50)
-    for i in xrange(1, randint(10, 200)):
+    for i in xrange(1, randint(10, 100)):
         p.update("fast spinning classic with brackets %i " % i)
         sleep(0.1)
     p.end("ok")
+
+    """
+    Phenox
+    """
+    for s in range(0, 7):
+        p = propeller(style="styles.spinner.Phenox", spinner=s, updateinterval=50)
+        for i in xrange(1, randint(10, 200)):
+            p.update("pnx %i " % i)
+            sleep(0.1)
+        p.end("ok")
 
     """
     Simple progess bar
