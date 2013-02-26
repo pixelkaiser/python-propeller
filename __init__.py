@@ -38,126 +38,14 @@ import locale
 from time import time
 from random import randint
 
-
-class Style(object):
-
-    spinner_pos = 0
-    progress_width = 0
-    current = 0
-    maximum = 0
-
-    def update_spinner(self):
-        """
-        update spinner position
-        """
-        spinner_pos = self.spinner_pos + 1
-        if spinner_pos >= len(self.spinner):
-            spinner_pos = 0
-        self.spinner_pos = spinner_pos
-
-    def update_progress(self, current, maximum):
-        """
-        calculate progress bar position based on current, maximum value and progress bar maxwidth
-        """
-        if not maximum > 0:
-            maximum = self.maximum
-        if current > self.current:
-            self.current = current
-
-        if maximum > 0:
-            percent = self.current * 100.0 / maximum
-            self.percent = percent
-            self.progress_width = int(percent / 100.0 * self.progress_maxwidth)
-            self.maximum = maximum
-
-    def output(self, current=0, maximum=0, *args, **kw):
-        """
-        update positions and get styled output
-        """
-        if hasattr(self, 'spinner_width'):
-            self.update_spinner()
-        if hasattr(self, 'progress_maxwidth'):
-            self.update_progress(current, maximum)
-        output = self._output(*args, **kw)
-        return output
-
-
-class Classic(Style):
-    spinner_prefix = '['
-    spinner_suffix = ']'
-    spinner_width = 1
-
-    spinners = ['-\|/', '.o0O0o']
-
-    def __init__(self, brackets=False, spinner=0):
-        self.brackets = brackets
-        self.spinner = self.spinners[spinner]
-        super(Classic, self).__init__()
-
-    def _output(self, final=False, endstring=None, *args, **kw):
-        if final:
-            output = endstring
-        else:
-            output = self.spinner[self.spinner_pos]
-
-        if self.brackets:
-            output = self.spinner_prefix + output + self.spinner_suffix
-
-        return output
-
-class ClassicUTF8(Style):
-    spinner_prefix = '['
-    spinner_suffix = ']'
-    spinner_width = 1
-
-    spinners = [u"□▣", u"◐◓◑◒", u"◜◝◞◟", u"◢◣◤◥", u"◴◷◶◵", u"☠ "]
-
-    def __init__(self, brackets=False, spinner=0):
-        self.brackets = brackets
-        if spinner == 0:
-            spinner = randint(0, len(self.spinners)-1)
-        self.spinner = self.spinners[spinner]
-        super(ClassicUTF8, self).__init__()
-
-    def _output(self, final=False, endstring=None, *args, **kw):
-        if final:
-            output = endstring
-        else:
-            output = self.spinner[self.spinner_pos]
-
-        if (self.brackets):
-            output = self.spinner_prefix + output + self.spinner_suffix
-
-        return output
-
-class ClassicProgress(Style):
-
-    progress_maxwidth = 0
-    progress_prefix = '['
-    progress_suffix = '] '
-    progress_empty = '~'
-    progress_check = '#'
-    showpcnt = False
-    lastoutput = 0
-
-    def __init__(self, width=10, showpercentage=False, *args, **kw):
-        self.progress_maxwidth = width
-        self.showpcnt = showpercentage
-        super(ClassicProgress, self).__init__(*args, **kw)
-
-    def _output(self, final=False, endstring=None, *args, **kw):
-        empty = "%s" % (self.progress_empty * self.progress_maxwidth)
-        filler = empty[self.progress_width:self.progress_maxwidth]
-        output = self.progress_prefix + "%s" % (self.progress_check * self.progress_width) + filler + self.progress_suffix
-
-        if self.showpcnt:
-            output = output + str(self.percent) + "% "
-
-        if final and endstring is not None:
-            output = output + endstring
-
-        return output
-
+"""
+from http://stackoverflow.com/questions/547829/how-to-dynamically-load-a-python-class
+"""
+def import_class(cl):
+    d = cl.rfind(".")
+    classname = cl[d+1:len(cl)]
+    m = __import__(cl[0:d], globals(), locals(), [classname])
+    return getattr(m, classname)
 
 class propeller:
 
@@ -170,12 +58,12 @@ class propeller:
     encoding = ""
     finished = False
 
-    def __init__(self, style=None, updateinterval=300):
+    def __init__(self, style="styles.spinner.Classic", updateinterval=300, *args, **kw):
         """
-        init style if none set
+        instantiate style
         """
-        if style is None:
-            style = Classic()
+        styleClass = import_class(style)
+        style = styleClass(*args, **kw)
 
         self.style = style
         self.interval = updateinterval
@@ -239,15 +127,14 @@ def main(argv):
     """
     p = propeller()
     for i in xrange(1, randint(10, 100)):
-        p.update("Spinning classic %i " % i)
-        sleep(0.1)
+         p.update("Spinning classic %i " % i)
+         sleep(0.1)
     p.end("done")
 
     """
     Simple spinner with brackets, limit output frequency
     """
-    classic_style = Classic(brackets=True, spinner=1)
-    p = propeller(style=classic_style, updateinterval=50)
+    p = propeller(style="styles.spinner.Classic", brackets=True, spinner=1, updateinterval=50)
     for i in xrange(1, randint(10, 200)):
         p.update("fast spinning classic with brackets %i " % i)
         sleep(0.1)
@@ -256,8 +143,7 @@ def main(argv):
     """
     Simple progess bar
     """
-    progress_style = ClassicProgress(width=50)
-    p = propeller(style=progress_style)
+    p = propeller(style="styles.progress.ClassicProgress", width=50)
     maximum = 10
     for i in xrange(1, maximum + 1):
         p.update("Classic progress brackets %i " % i, current=i, maximum=maximum)
@@ -269,8 +155,7 @@ def main(argv):
     """
     Simple progess bar with percentage shown
     """
-    progress_style = ClassicProgress(width=50, showpercentage=True)
-    p = propeller(style=progress_style)
+    p = propeller(style="styles.progress.ClassicProgress", width=50, showpercentage=True)
     maximum = 10
     for i in xrange(1, maximum + 1):
         p.update("Classic progress brackets and % ", current=i, maximum=maximum)
@@ -281,8 +166,7 @@ def main(argv):
     Simple spinners UTF8
     """
     for s in range(0, 1):
-        classic_style = ClassicUTF8()
-        p = propeller(style=classic_style, updateinterval=50)
+        p = propeller(style="styles.spinner.ClassicUTF8", updateinterval=50)
         for i in xrange(1, 100):
             p.update("Spinning UTF8 %i " % i)
             sleep(0.1)
