@@ -10,7 +10,7 @@ setup(
     license="BSD",
     url="https://github.com/pixelkaiser/python-propeller",
     download_url="https://bitbucket.org/nexttuesday/django-rpc/",
-    packages=[ 'propeller' ],
+    packages=[ 'propeller', 'propeller.styles' ],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
